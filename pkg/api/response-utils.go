@@ -7,6 +7,10 @@ import (
 	"net/http"
 )
 
+const (
+	errTypeError = "ERROR"
+)
+
 func HandleOptions(response http.ResponseWriter, request *http.Request) {
 	response.Header().Set("Access-Control-Allow-Origin", "*")
 	response.Header().Set("Access-Control-Allow-Methods", "OPTIONS, GET, POST, PUT, DELETE, PATCH")
@@ -41,4 +45,12 @@ func WriteModel(response http.ResponseWriter, model interface{}, httpStatus int)
 	}
 	response.WriteHeader(httpStatus)
 	fmt.Fprint(response, string(jsonStr))
+}
+
+
+func NewErrorResponse(msg string) *ErrorModel {
+	return &ErrorModel{
+		Message: msg,
+		Type:    errTypeError,
+	}
 }

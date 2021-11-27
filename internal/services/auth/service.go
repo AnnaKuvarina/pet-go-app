@@ -1,9 +1,12 @@
 package auth
 
 import (
+	. "github.com/AnnaKuvarina/pet-go-app/internal/api/auth"
+	. "github.com/AnnaKuvarina/pet-go-app/internal/postgre/credentials"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
+	"golang.org/x/crypto/bcrypt"
 	"io/ioutil"
 	"time"
 )
@@ -17,11 +20,12 @@ var (
 	AuthenticationError          = errors.New("invalid token: authentication failed")
 )
 
-type Service struct {
+type IService interface {
+	GenerateAccessToken(user *UserCredItem) (string, error)
 }
 
-type User struct {
-	ID string
+type Service struct {
+	IService
 }
 
 type AccessTokenClaims struct {
@@ -34,7 +38,7 @@ func NewAuthService() *Service {
 	return &Service{}
 }
 
-func (s *Service) GenerateAccessToken(user *User) (string, error) {
+func (s *Service) GenerateAccessToken(user *UserCredItem) (string, error) {
 	userID := user.ID
 	tokenType := "access"
 
@@ -100,4 +104,12 @@ func verifyKey(token *jwt.Token) (interface{}, error) {
 	}
 
 	return verifyKey, nil
+}
+
+func (s *Service) Authenticate(reqUser *LoginRequestData, user *UserCredItem) bool {
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(reqUser.Password)); err != nil {
+		log.Debug().Msg("password hashes are not same")
+		return false
+	}
+	return true
 }

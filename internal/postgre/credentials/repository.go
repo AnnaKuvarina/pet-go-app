@@ -1,6 +1,9 @@
 package postgre
 
-import "github.com/AnnaKuvarina/pet-go-app/pkg/stores"
+import (
+	"context"
+	"github.com/AnnaKuvarina/pet-go-app/pkg/stores"
+)
 
 func NewUserCredsStore(pgStore *stores.PGStore) *UserCredsStore {
 	return &UserCredsStore{
@@ -8,3 +11,6 @@ func NewUserCredsStore(pgStore *stores.PGStore) *UserCredsStore {
 	}
 }
 
+func GetUserByEmail(ctx context.Context,email string) (*UserCredItem, error){
+	return nil, nil
+}
