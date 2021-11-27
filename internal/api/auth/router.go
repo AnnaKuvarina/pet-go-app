@@ -1,11 +1,13 @@
 package auth
 
-import "github.com/gorilla/mux"
+import (
+	"github.com/AnnaKuvarina/pet-go-app/pkg/api"
+	"github.com/gorilla/mux"
+)
 
-func NewHttpRouter(handler *Handler) *mux.Router {
-	router := mux.NewRouter()
-	router.HandleFunc("/login", handler.Login).Methods("POST")
-	router.HandleFunc("/signup", handler.Signup).Methods("POST")
+func NewHttpRouter(appRouter *mux.Router, handler *Handler) {
+	appRouter.HandleFunc("/login", handler.Login).Methods("POST")
+	appRouter.HandleFunc("/signup", handler.Signup).Methods("POST")
 
-	return router
+	appRouter.Use(api.ContentTypeMiddleware)
 }

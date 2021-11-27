@@ -9,6 +9,7 @@ import (
 )
 
 const (
+	port        = "PORT"
 	envFileName = "ENV_FILE_NAME"
 	postgreName = "POSTGRE_NAME"
 	postgreHost = "POSTGRE_HOST"
@@ -43,6 +44,9 @@ func LoadConfig() error {
 		}
 	}
 
+	// api
+	viper.SetDefault(port, 8000)
+
 	// postgre
 	viper.SetDefault(postgreHost, defaultPostgreHost)
 	viper.SetDefault(postgrePort, defaultPostgrePort)
@@ -54,6 +58,7 @@ func LoadConfig() error {
 	viper.SetDefault(mongoURL, defaultMongoURL)
 
 	config.AppConfig = &config.Config{
+		Port: viper.GetUint(port),
 		PostgreStore: &stores.PostgreConfig{
 			Host:               viper.GetString(postgreHost),
 			DB:                 viper.GetString(postgreName),

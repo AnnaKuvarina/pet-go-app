@@ -1,4 +1,4 @@
-package postgre
+package creds_store
 
 import (
 	"context"
@@ -11,6 +11,6 @@ func NewUserCredsStore(pgStore *stores.PGStore) *UserCredsStore {
 	}
 }
 
-func GetUserByEmail(ctx context.Context,email string) (*UserCredItem, error){
+func GetUserByEmail(ctx context.Context, email string) (*UserCredItem, error) {
 	return nil, nil
 }

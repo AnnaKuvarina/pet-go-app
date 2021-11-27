@@ -3,22 +3,21 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/AnnaKuvarina/pet-go-app/internal/api/auth"
 	"github.com/AnnaKuvarina/pet-go-app/internal/mongo"
-	"github.com/AnnaKuvarina/pet-go-app/internal/postgre"
-	"github.com/AnnaKuvarina/pet-go-app/internal/products"
-	"github.com/AnnaKuvarina/pet-go-app/internal/users"
+	. "github.com/AnnaKuvarina/pet-go-app/internal/postgre/credentials"
+	. "github.com/AnnaKuvarina/pet-go-app/internal/services/auth"
 	"github.com/AnnaKuvarina/pet-go-app/pkg/config"
 	"github.com/AnnaKuvarina/pet-go-app/pkg/stores"
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
+	"net/http"
 )
 
-var (
-	appPostgreStore *postgre.AppPostgreStore
-	appMongoStore   *mongo.AppMongoStore
-	productsRouter  *mux.Router
-	usersRouter     *mux.Router
-)
+type Stores struct {
+	AuthStore    *UserCredsStore
+	CatalogStore *mongo.AppMongoStore
+}
 
 func main() {
 	log.Debug().Msg("Start server")
@@ -28,10 +27,23 @@ func main() {
 		return
 	}
 
+	appStores, err := InitStores()
+	if err != nil {
+		log.Fatal().Stack().Err(err).Msg("failed to init stores")
+		return
+	}
+
+	router := initRouters(appStores)
+
+	errChan := make(chan error)
+
+	go func() {
+		errChan <- http.ListenAndServe(fmt.Sprintf(":%d", config.AppConfig.Port), router)
+	}()
 
 }
 
-func InitApp() error {
+func InitStores() (*Stores, error) {
 	ctx := context.Background()
 
 	postgreStore, err := stores.NewPostgreStore(config.AppConfig.PostgreStore)
@@ -50,11 +62,23 @@ func InitApp() error {
 	}
 	fmt.Println("connected to MongoDB")
 
-	appPostgreStore = postgre.NewAppStore(postgreStore)
-	appMongoStore = mongo.NewAppMongoStore(mongoStore, config.AppConfig.MongoStore)
+	authStore := NewUserCredsStore(postgreStore)
+	appMongoStore := mongo.NewAppMongoStore(mongoStore, config.AppConfig.MongoStore)
 
-	usersRouter = users.NewUsersRouter(appMongoStore, appPostgreStore)
-	productsRouter = products.NewProductsRouter(appMongoStore)
+	return &Stores{
+		CatalogStore: appMongoStore,
+		AuthStore: authStore,
+	}, nil
+}
 
-	return nil
+func initRouters(appStores *Stores) *mux.Router {
+	router := *mux.NewRouter()
+	authService := NewAuthService()
+	authHandler := &auth.Handler{
+		Store:       appStores.AuthStore,
+		AuthService: authService,
+	}
+	auth.NewHttpRouter(&router, authHandler)
+
+	return &router
 }
