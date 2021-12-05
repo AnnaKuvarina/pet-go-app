@@ -1,8 +1,9 @@
 package auth
 
 import (
+	"context"
 	"encoding/json"
-	. "github.com/AnnaKuvarina/pet-go-app/internal/postgre/credentials"
+	. "github.com/AnnaKuvarina/pet-go-app/internal/pg-store"
 	"github.com/AnnaKuvarina/pet-go-app/internal/services/auth"
 	"github.com/AnnaKuvarina/pet-go-app/pkg/api"
 	"github.com/AnnaKuvarina/pet-go-app/pkg/utils"
@@ -91,4 +92,31 @@ func (h *Handler) Login(resp http.ResponseWriter, req *http.Request) {
 	}
 
 	api.WriteModel(resp, &LoginResponseData{AccessToken: accessToken, Username: user.Username}, http.StatusOK)
+}
+
+
+func (h *Handler) MiddlewareValidateAccessToken(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
+		log.Debug().Msg("validate access token")
+
+		token, err := utils.ExtractToken(req)
+		if err != nil {
+			api.WriteErrModel(resp, api.NewErrorResponse("token invalid"), http.StatusBadRequest)
+			return
+		}
+		log.Debug().Msgf("got access token %s", token)
+
+		userID, err := h.AuthService.ValidateAccessToken(token)
+		if err != nil {
+			log.Error().Err(err).Msg("token validation failed")
+			api.WriteErrModel(resp, api.NewErrorResponse("token validation failed"), http.StatusBadRequest)
+			return
+		}
+		log.Debug().Msg("access token validated")
+
+		ctx := context.WithValue(req.Context(), api.UserIDKey{}, userID)
+		req = req.WithContext(ctx)
+
+		next.ServeHTTP(resp, req)
+	})
 }

@@ -1,4 +1,4 @@
-package creds_store
+package pg_store
 
 import (
 	"github.com/AnnaKuvarina/pet-go-app/pkg/stores"

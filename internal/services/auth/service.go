@@ -2,7 +2,7 @@ package auth
 
 import (
 	. "github.com/AnnaKuvarina/pet-go-app/internal/api/auth"
-	. "github.com/AnnaKuvarina/pet-go-app/internal/postgre/credentials"
+	. "github.com/AnnaKuvarina/pet-go-app/internal/pg-store"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"

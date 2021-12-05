@@ -1,4 +1,4 @@
-package creds_store
+package pg_store
 
 import (
 	"context"
